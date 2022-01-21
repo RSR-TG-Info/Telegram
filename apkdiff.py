@@ -41,11 +41,11 @@ def compare(first, second):
 				secondList.remove(secondInfo)
 				break
 
-		if found == False:
+		if not found:
 			print("file %s not found in second APK" % firstInfo.filename)
 			return False
 
-	if len(secondList) != 0:
+	if secondList:
 		for secondInfo in secondList:
 			print("file %s not found in first APK" % secondInfo.filename)
 		return False

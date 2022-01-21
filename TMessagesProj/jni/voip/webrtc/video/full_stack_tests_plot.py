@@ -109,25 +109,23 @@ class Data(object):
 
     def _ReadSamples(self, filename):
         """Reads graph data from the given file."""
-        f = open(filename)
-        it = iter(f)
+        with open(filename) as f:
+            it = iter(f)
 
-        self.title = it.next().strip()
-        self.length = int(it.next())
-        field_names = [name.strip() for name in it.next().split()]
-        field_ids = [NAME_TO_ID[name] for name in field_names]
+            self.title = it.next().strip()
+            self.length = int(it.next())
+            field_names = [name.strip() for name in it.next().split()]
+            field_ids = [NAME_TO_ID[name] for name in field_names]
 
-        for field_id in field_ids:
-            self.samples[field_id] = [0.0] * self.length
+            for field_id in field_ids:
+                self.samples[field_id] = [0.0] * self.length
 
-        for sample_id in xrange(self.length):
-            for col, value in enumerate(it.next().split()):
-                self.samples[field_ids[col]][sample_id] = float(value)
+            for sample_id in xrange(self.length):
+                for col, value in enumerate(it.next().split()):
+                    self.samples[field_ids[col]][sample_id] = float(value)
 
-        self._SubtractFirstInputTime()
-        self._GenerateAdditionalData()
-
-        f.close()
+            self._SubtractFirstInputTime()
+            self._GenerateAdditionalData()
 
     def _SubtractFirstInputTime(self):
         offset = self.samples[INPUT_TIME][0]
@@ -440,7 +438,7 @@ def PlotConfigsFromArgs(args):
     #   argparse.ArgumentParser, modified to remember the order of arguments.
     #   Then we traverse the argument list and fill the PlotConfig.
     args = itertools.groupby(args, lambda x: x in ["-n", "--next"])
-    prep_args = list(list(group) for match, group in args if not match)
+    prep_args = [list(group) for match, group in args if not match]
 
     parser = GetParser()
     plot_configs = []

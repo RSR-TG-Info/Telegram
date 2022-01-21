@@ -41,11 +41,7 @@ def recover_x(y, sign):
         return None
     x2 = (y*y-1) * modp_inv(d*y*y+1)
     if x2 == 0:
-        if sign:
-            return None
-        else:
-            return 0
-
+        return None if sign else 0
     # Compute square root of x2
     x = pow(x2, (p+3) // 8, p)
     if (x*x - x2) % p != 0:
@@ -198,7 +194,7 @@ static const fe d2 = """)
 // is the most significant bit). The value of the group element is then:
 // (i₀×2^192 + i₁×2^128 + i₂×2^64 + i₃)G, where G is the generator.
 static const uint8_t k25519SmallPrecomp[15 * 2 * 32] = {""")
-    for i, b in enumerate(small_precomp):
+    for b in small_precomp:
         buf.write("0x%02x, " % b)
     buf.write("""
 };

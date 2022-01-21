@@ -197,16 +197,9 @@ def FuseGTestAllCcToFile(gtest_root, output_file):
           # It's '#include "gtest/gtest-spi.h"'.  This file is not
           # #included by "gtest/gtest.h", so we need to process it.
           ProcessFile(GTEST_SPI_H_SEED)
-        else:
-          # It's '#include "gtest/foo.h"' where foo is not gtest-spi.
-          # We treat it as '#include "gtest/gtest.h"', as all other
-          # gtest headers are being fused into gtest.h and cannot be
-          # #included directly.
-
-          # There is no need to #include "gtest/gtest.h" more than once.
-          if not GTEST_H_SEED in processed_files:
-            processed_files.add(GTEST_H_SEED)
-            output_file.write('#include "%s"\n' % (GTEST_H_OUTPUT,))
+        elif GTEST_H_SEED not in processed_files:
+          processed_files.add(GTEST_H_SEED)
+          output_file.write('#include "%s"\n' % (GTEST_H_OUTPUT,))
       else:
         m = INCLUDE_SRC_FILE_REGEX.match(line)
         if m:
@@ -221,9 +214,8 @@ def FuseGTestAllCcToFile(gtest_root, output_file):
 def FuseGTestAllCc(gtest_root, output_dir):
   """Scans folder gtest_root to generate gtest/gtest-all.cc in output_dir."""
 
-  output_file = open(os.path.join(output_dir, GTEST_ALL_CC_OUTPUT), 'w')
-  FuseGTestAllCcToFile(gtest_root, output_file)
-  output_file.close()
+  with open(os.path.join(output_dir, GTEST_ALL_CC_OUTPUT), 'w') as output_file:
+    FuseGTestAllCcToFile(gtest_root, output_file)
 
 
 def FuseGTest(gtest_root, output_dir):

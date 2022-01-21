@@ -30,6 +30,7 @@
 
 """Unit test for the gtest_json_output module."""
 
+
 import datetime
 import errno
 import json
@@ -51,11 +52,7 @@ NO_STACKTRACE_SUPPORT_FLAG = '--no_stacktrace_support'
 
 SUPPORTS_STACK_TRACES = NO_STACKTRACE_SUPPORT_FLAG not in sys.argv
 
-if SUPPORTS_STACK_TRACES:
-  STACK_TRACE_TEMPLATE = '\nStack trace:\n*'
-else:
-  STACK_TRACE_TEMPLATE = ''
-
+STACK_TRACE_TEMPLATE = '\nStack trace:\n*' if SUPPORTS_STACK_TRACES else ''
 EXPECTED_NON_EMPTY = {
     u'tests':
         24,

@@ -835,11 +835,7 @@ class SubversionVCS(VersionControlSystem):
 
   def GetUnknownFiles(self):
     status = RunShell(["svn", "status", "--ignore-externals"], silent_ok=True)
-    unknown_files = []
-    for line in status.split("\n"):
-      if line and line[0] == "?":
-        unknown_files.append(line)
-    return unknown_files
+    return [line for line in status.split("\n") if line and line[0] == "?"]
 
   def ReadFile(self, filename):
     """Returns the contents of a file."""
@@ -867,9 +863,6 @@ class SubversionVCS(VersionControlSystem):
         status = status_lines[2]
       else:
         status = status_lines[0]
-    # If we have a revision to diff against we need to run "svn list"
-    # for the old and the new revision and compare the results to get
-    # the correct status for a file.
     else:
       dirname, relfilename = os.path.split(filename)
       if dirname not in self.svnls_cache:
@@ -889,7 +882,7 @@ class SubversionVCS(VersionControlSystem):
       old_files, new_files = self.svnls_cache[dirname]
       if relfilename in old_files and relfilename not in new_files:
         status = "D   "
-      elif relfilename in old_files and relfilename in new_files:
+      elif relfilename in old_files:
         status = "M   "
       else:
         status = "A   "
@@ -913,9 +906,8 @@ class SubversionVCS(VersionControlSystem):
       is_binary = mimetype and not mimetype.startswith("text/")
       if is_binary and self.IsImage(filename):
         new_content = self.ReadFile(filename)
-    elif (status[0] in ("M", "D", "R") or
-          (status[0] == "A" and status[3] == "+") or  # Copied file.
-          (status[0] == " " and status[1] == "M")):  # Property change.
+    elif (status[0] in ("M", "D", "R") or status[0] == "A"
+          or status[0] == " " and status[1] == "M"):# Property change.
       args = []
       if self.options.revision:
         url = "%s/%s@%s" % (self.svn_base, filename, self.rev_start)
@@ -931,29 +923,23 @@ class SubversionVCS(VersionControlSystem):
         mimetype = ""
       get_base = False
       is_binary = mimetype and not mimetype.startswith("text/")
-      if status[0] == " ":
-        # Empty base content just to force an upload.
+      if status[0] != " " and is_binary and self.IsImage(filename):
+        get_base = True
+        if status[0] == "M":
+          if not self.rev_end:
+            new_content = self.ReadFile(filename)
+          else:
+            url = "%s/%s@%s" % (self.svn_base, filename, self.rev_end)
+            new_content = RunShell(["svn", "cat", url],
+                                   universal_newlines=True, silent_ok=True)
+      elif (status[0] != " " and is_binary and not self.IsImage(filename)
+            or status[0] == " "):
         base_content = ""
-      elif is_binary:
-        if self.IsImage(filename):
-          get_base = True
-          if status[0] == "M":
-            if not self.rev_end:
-              new_content = self.ReadFile(filename)
-            else:
-              url = "%s/%s@%s" % (self.svn_base, filename, self.rev_end)
-              new_content = RunShell(["svn", "cat", url],
-                                     universal_newlines=True, silent_ok=True)
-        else:
-          base_content = ""
       else:
         get_base = True
 
       if get_base:
-        if is_binary:
-          universal_newlines = False
-        else:
-          universal_newlines = True
+        universal_newlines = not is_binary
         if self.rev_start:
           # "svn cat -r REV delete_file.txt" doesn't work. cat requires
           # the full URL with "@REV" appended instead of using "-r" option.
@@ -979,7 +965,7 @@ class SubversionVCS(VersionControlSystem):
     else:
       StatusUpdate("svn status returned unexpected output: %s" % status)
       sys.exit(1)
-    return base_content, new_content, is_binary, status[0:5]
+    return base_content, new_content, is_binary, status[:5]
 
 
 class GitVCS(VersionControlSystem):
@@ -1050,10 +1036,8 @@ class MercurialVCS(VersionControlSystem):
     cwd = os.path.normpath(os.getcwd())
     assert cwd.startswith(self.repo_dir)
     self.subdir = cwd[len(self.repo_dir):].lstrip(r"\/")
-    if self.options.revision:
-      self.base_rev = self.options.revision
-    else:
-      self.base_rev = RunShell(["hg", "parent", "-q"]).split(':')[1].strip()
+    self.base_rev = (self.options.revision
+                     or RunShell(["hg", "parent", "-q"]).split(':')[1].strip())
 
   def _GetRelPath(self, filename):
     """Get relative path of a file according to the current directory,
