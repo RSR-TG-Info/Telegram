@@ -138,13 +138,12 @@ class GTestXMLTestCase(gtest_test_utils.TestCase):
         self.assert_(child_id not in children)
         children[child_id] = child
       elif child.nodeType in [Node.TEXT_NODE, Node.CDATA_SECTION_NODE]:
-        if 'detail' not in children:
-          if (child.nodeType == Node.CDATA_SECTION_NODE or
-              not child.nodeValue.isspace()):
-            children['detail'] = child.ownerDocument.createCDATASection(
-                child.nodeValue)
-        else:
+        if 'detail' in children:
           children['detail'].nodeValue += child.nodeValue
+        elif (child.nodeType == Node.CDATA_SECTION_NODE or
+              not child.nodeValue.isspace()):
+          children['detail'] = child.ownerDocument.createCDATASection(
+              child.nodeValue)
       else:
         self.fail('Encountered unexpected node type %d' % child.nodeType)
     return children

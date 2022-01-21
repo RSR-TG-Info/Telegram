@@ -64,7 +64,7 @@ def parse(filename, data, current):
     source = f.read().split('\n')
 
   out = current
-  if out == None:
+  if out is None:
     out = [0 if is_asm(l) else None for l in source]
 
   # Lines are of the following formats:
@@ -83,7 +83,7 @@ def parse(filename, data, current):
       count = l.split(' ')[0].replace(',', '').replace('.', '0')
       instruction = l.split(' ', 1)[1].strip()
       if count != '0' or is_asm(instruction):
-        if out[line] == None:
+        if out[line] is None:
           out[line] = 0
         out[line] += int(count)
       line += 1
@@ -107,10 +107,7 @@ def generate(data):
       res = data[i + 1]
       if filename not in out:
         out[filename] = None
-      if 'No information' in res:
-        res = []
-      else:
-        res = res.split('\n')
+      res = [] if 'No information' in res else res.split('\n')
       out[filename] = parse(filename, res, out[filename])
   return out
 

@@ -435,17 +435,13 @@ def NoTestsNorFIPSFragments(path, dent, is_dir):
 def NoTests(path, dent, is_dir):
   """Filter function that can be passed to FindCFiles in order to remove test
   sources."""
-  if is_dir:
-    return dent != 'test'
-  return 'test.' not in dent
+  return dent != 'test' if is_dir else 'test.' not in dent
 
 
 def OnlyTests(path, dent, is_dir):
   """Filter function that can be passed to FindCFiles in order to remove
   non-test sources."""
-  if is_dir:
-    return dent != 'test'
-  return '_test.' in dent
+  return dent != 'test' if is_dir else '_test.' in dent
 
 
 def AllFiles(path, dent, is_dir):
@@ -560,7 +556,7 @@ def ArchForAsmFilename(filename):
 
   if 'x86_64' in filename or 'avx2' in filename:
     return ['x86_64']
-  elif ('x86' in filename and 'x86_64' not in filename) or '586' in filename:
+  elif 'x86' in filename or '586' in filename:
     return ['x86']
   elif 'armx' in filename:
     return ['arm', 'aarch64']

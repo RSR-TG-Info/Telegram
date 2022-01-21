@@ -362,8 +362,7 @@ class GTestXMLOutputUnitTest(gtest_xml_test_utils.GTestXMLTestCase):
                         "'%s' exited with code %s, which doesn't match "
                         'the expected exit code %s.'
                         % (command, p.exit_code, expected_exit_code))
-    actual = minidom.parse(xml_path)
-    return actual
+    return minidom.parse(xml_path)
 
   def _TestXmlOutput(self, gtest_prog_name, expected_xml,
                      expected_exit_code, extra_args=None, extra_env=None):
